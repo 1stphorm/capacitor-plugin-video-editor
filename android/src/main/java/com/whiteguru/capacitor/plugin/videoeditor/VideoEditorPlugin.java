@@ -1,6 +1,7 @@
 package com.whiteguru.capacitor.plugin.videoeditor;
 
 import android.Manifest;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 
@@ -21,6 +22,7 @@ import com.linkedin.android.litr.analytics.TrackTransformationInfo;
 import com.linkedin.android.litr.TransformationListener;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -61,11 +63,14 @@ public class VideoEditorPlugin extends Plugin {
 
         if (checkStoragePermissions(call)) {
             Uri inputUri = Uri.parse(path);
-            File inputFile = new File(inputUri.getPath());
 
-            if (!inputFile.canRead()) {
-                call.reject("Cannot read input file: " + inputFile.getAbsolutePath());
-                return;
+
+            if (ContentResolver.SCHEME_FILE.equals(inputUri.getScheme())) {
+                File inputFile = new File(inputUri.getPath());
+                if (!inputFile.canRead()) {
+                    call.reject("Cannot read input file: " + inputFile.getAbsolutePath());
+                    return;
+                }
             }
 
             String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.ENGLISH).format(new Date());
@@ -127,7 +132,7 @@ public class VideoEditorPlugin extends Plugin {
                                 }
                             };
 
-                            implementation.edit(getContext(), inputFile, outputFile, trimSettings, transcodeSettings, videoTransformationListener);
+                            implementation.edit(getContext(), inputUri, outputFile, trimSettings, transcodeSettings, videoTransformationListener);
                         } catch (Exception e) {
                             call.reject(e.getMessage());
                         }

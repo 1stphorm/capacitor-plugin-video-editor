@@ -41,11 +41,11 @@ public class VideoEditorLitr {
         return (long) (0.07F * 2 * width * height * frameRate);
     }
 
-    public void edit(Context context, File srcFile, File outFile, TrimSettings trimSettings, TranscodeSettings transcodeSettings, TransformationListener videoTransformationListener) throws IOException {
+    public void edit(Context context, Uri sourceVideoUri, File outFile, TrimSettings trimSettings, TranscodeSettings transcodeSettings, TransformationListener videoTransformationListener) throws IOException {
         MediaTransformer mediaTransformer = new MediaTransformer(context);
 
         String requestId = UUID.randomUUID().toString();
-        Uri sourceVideoUri = Uri.fromFile(srcFile);
+//      Uri sourceVideoUri = Uri.fromFile(srcFile);
         String targetVideoFilePath = outFile.getPath();
         SourceMedia sourceMedia = new SourceMedia(context, sourceVideoUri);
 
