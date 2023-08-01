@@ -124,7 +124,7 @@ extension SimpleSessionExporter {
         // Export
         guard let export = AVAssetExportSession(
             asset: composition,
-            presetName: AVAssetExportPresetMediumQuality)
+            presetName: AVAssetExportPresetHighestQuality)
         else {
             print("Cannot create export session.")
             completionHandler(.failed)
