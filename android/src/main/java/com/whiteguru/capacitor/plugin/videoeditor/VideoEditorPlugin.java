@@ -4,6 +4,8 @@ import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
+import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -35,16 +37,24 @@ import java.util.List;
                 @Permission(
                         strings = {Manifest.permission.READ_EXTERNAL_STORAGE},
                         alias = VideoEditorPlugin.STORAGE
+                ),
+                @Permission(
+                        strings = {Manifest.permission.READ_MEDIA_VIDEO},
+                        alias = VideoEditorPlugin.MEDIA_VIDEO
                 )
+
         }
 )
 public class VideoEditorPlugin extends Plugin {
 
     // Permission alias constants
     static final String STORAGE = "storage";
+    static final String MEDIA_VIDEO = "media_video";
 
     // Message constants
     private static final String PERMISSION_DENIED_ERROR_STORAGE = "User denied access to storage";
+    private static final String STORAGE_PERMISSION = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ? MEDIA_VIDEO : STORAGE;
+
 
     @PluginMethod
     public void edit(PluginCall call) {
@@ -180,8 +190,8 @@ public class VideoEditorPlugin extends Plugin {
     }
 
     private boolean checkStoragePermissions(PluginCall call) {
-        if (getPermissionState(STORAGE) != PermissionState.GRANTED) {
-            requestPermissionForAlias(STORAGE, call, "storagePermissionsCallback");
+        if (getPermissionState(STORAGE_PERMISSION) != PermissionState.GRANTED) {
+            requestPermissionForAlias(STORAGE_PERMISSION, call, "storagePermissionsCallback");
             return false;
         }
         return true;
@@ -194,8 +204,8 @@ public class VideoEditorPlugin extends Plugin {
      */
     @PermissionCallback
     private void storagePermissionsCallback(PluginCall call) {
-        if (getPermissionState(STORAGE) != PermissionState.GRANTED) {
-            Logger.debug(getLogTag(), "User denied photos permission: " + getPermissionState(STORAGE).toString());
+        if (getPermissionState(STORAGE_PERMISSION) != PermissionState.GRANTED) {
+            Logger.debug(getLogTag(), "User denied photos permission: " + getPermissionState(STORAGE_PERMISSION).toString());
             call.reject(PERMISSION_DENIED_ERROR_STORAGE);
             return;
         }
@@ -219,7 +229,13 @@ public class VideoEditorPlugin extends Plugin {
     private JSObject createMediaFile(File file) {
         Context context = getBridge().getActivity().getApplicationContext();
         Uri uri = Uri.fromFile(file);
-        String mimeType = context.getContentResolver().getType(uri);
+        String mimeType;
+
+        if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
+            mimeType = context.getContentResolver().getType(uri);
+        } else {
+            mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(uri.toString()));
+        }
 
         JSObject ret = new JSObject();
 
