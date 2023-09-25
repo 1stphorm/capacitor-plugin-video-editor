@@ -1,5 +1,6 @@
 import Foundation
 import AVFoundation
+import NextLevelSessionExporter
 import UIKit
 
 @objc public class VideoEditor: NSObject {
@@ -32,41 +33,55 @@ import UIKit
         let range = CMTimeRangeMake(start: start, duration: duration)
         
         // Exporter
-        let exporter = SimpleSessionExporter(withAsset: avAsset)
+        let exporter = NextLevelSessionExporter(withAsset: avAsset)
         exporter.outputFileType = AVFileType.mp4
         exporter.outputURL = outFile
         exporter.timeRange = range
         
         exporter.videoOutputConfiguration = [
+            AVVideoCodecKey: AVVideoCodecType.h264,
             AVVideoWidthKey: NSNumber(integerLiteral: Int(targetVideoSize.width)),
             AVVideoHeightKey: NSNumber(integerLiteral: Int(targetVideoSize.height)),
         ]
         
+        exporter.audioOutputConfiguration = [
+            AVFormatIDKey: kAudioFormatMPEG4AAC,
+            AVEncoderBitRateKey: NSNumber(integerLiteral: 96000),
+            AVNumberOfChannelsKey: NSNumber(integerLiteral: 1),
+            AVSampleRateKey: NSNumber(value: Float(44100))
+        ]
+
         let progressUpdater = DispatchQueue.main.schedule(
             after: .init(.now()),
-            interval: .milliseconds(250),
+            interval: .milliseconds(150),
             {
                 progressHandler(exporter.progress)
             }
         )
         
         exporter.export(
-            completionHandler: { status in
+            completionHandler: { result in
                 progressUpdater.cancel()
-                switch status {
-                case .completed:
-                    completionHandler(exporter.outputURL!)
+                switch result {
+                case .success(let status):
+                    switch status {
+                    case .completed:
+                        completionHandler(exporter.outputURL!)
+                        break
+                    case .failed:
+                        errorHandler("Failed to transcode")
+                        break
+                    default:
+                        errorHandler("Unknow export status: \(status)")
+                    }
+                case .failure(let error):
+                    print("NextLevelSessionExporter, failed to export \(error)")
                     break
-                case .failed:
-                    errorHandler("Failed to transcode")
-                    break
-                default:
-                    errorHandler("Unknow export status: \(status)")
                 }
             }
         )
     }
-    
+
     @objc public func thumbnail(
         srcFile: URL,
         outFile: URL,
