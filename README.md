@@ -2,24 +2,31 @@
 
 Capacitor plugin to edit videos
 
-## Install
+## Install (Capacitor 6.x)
 
 ```bash
 npm install @whiteguru/capacitor-plugin-video-editor
 npx cap sync
 ```
 
+### or for Capacitor 5.x
+
+```bash
+npm install @whiteguru/capacitor-plugin-video-editor@^5.0.6
+npx cap sync
+```
+
 ### or for Capacitor 4.x
 
 ```bash
-pm install @whiteguru/capacitor-plugin-video-editor@^4.0.4
+npm install @whiteguru/capacitor-plugin-video-editor@^4.0.4
 npx cap sync
 ```
 
 ### or for Capacitor 3.x
 
 ```bash
-pm install @whiteguru/capacitor-plugin-video-editor@^3.0.1
+npm install @whiteguru/capacitor-plugin-video-editor@^3.0.1
 npx cap sync
 ```
 
@@ -42,6 +49,62 @@ You can also specify those permissions only for the Android versions where they 
 The storage permissions are for reading video files.
 
 Read about [Setting Permissions](https://capacitorjs.com/docs/android/configuration#setting-permissions) in the [Android Guide](https://capacitorjs.com/docs/android) for more information on setting Android permissions.
+
+## Example
+
+```typescript
+import {
+  VideoEditor,
+  MediaFileResult,
+} from '@whiteguru/capacitor-plugin-video-editor';
+
+const sourceVideoPath =
+  'file:///var/mobile/Containers/Data/...../sourceVideo.mp4';
+
+// Transcode with progress
+const progressListener = await VideoEditor.addListener(
+  'transcodeProgress',
+  info => console.log('info', info),
+);
+
+VideoEditor.edit({
+  path: sourceVideoPath,
+  transcode: {
+    width: 720,
+    height: 480,
+    keepAspectRatio: true,
+    fps: 30,
+  },
+  trim: {
+    startsAt: 3 * 1000, // from 00:03
+    endsAt: 10 * 1000, // to 00:10
+  },
+}).then(
+  (mediaFileResult: MediaFileResult) => {
+    progressListener.remove();
+
+    console.log('mediaPath', mediaFileResult.file.path);
+  },
+  error => {
+    console.error('error', error);
+  },
+);
+
+// Thumbnail
+VideoEditor.thumbnail({
+  path: sourceVideoPath,
+  width: 150,
+  height: 150,
+  at: 4 * 1000, // at 00:04
+}).then(
+  (thumbMediaFileResult: MediaFileResult) => {
+    console.log('thumbPath', thumbMediaFileResult.file.path);
+  },
+  error => {
+    console.error('error', error);
+  },
+);
+```
 
 ## API
 
@@ -142,11 +205,12 @@ addListener(eventName: 'transcodeProgress', listenerFunc: (info: ProgressInfo) =
 
 #### TranscodeOptions
 
-| Prop                  | Type                 |
-| --------------------- | -------------------- |
-| **`height`**          | <code>number</code>  |
-| **`width`**           | <code>number</code>  |
-| **`keepAspectRatio`** | <code>boolean</code> |
+| Prop                  | Type                 | Description                       |
+| --------------------- | -------------------- | --------------------------------- |
+| **`height`**          | <code>number</code>  |                                   |
+| **`width`**           | <code>number</code>  |                                   |
+| **`keepAspectRatio`** | <code>boolean</code> | Keep Aspect Ratio, default `true` |
+| **`fps`**             | <code>number</code>  | Frames per second, default `30`   |
 
 
 #### ThumbnailOptions
