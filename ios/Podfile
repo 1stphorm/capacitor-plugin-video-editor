@@ -5,7 +5,7 @@ def capacitor_pods
   use_frameworks!
   pod 'Capacitor', :path => '../node_modules/@capacitor/ios'
   pod 'CapacitorCordova', :path => '../node_modules/@capacitor/ios'
-  pod 'NextLevelSessionExporter', '~> 0.4.5'
+  pod 'NextLevelSessionExporter', :git => 'https://github.com/1stphorm/NextLevelSessionExporter.git'
 end
 
 target 'Plugin' do
